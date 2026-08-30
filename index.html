@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Legoify Character</title>
+  <meta name="description" content="Turn a photo into a 3D brick-built LEGO character you can spin around." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%23c8511b%22/><circle cx=%2230%22 cy=%2232%22 r=%2211%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22/><circle cx=%2270%22 cy=%2232%22 r=%2211%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22/></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Upload -->
+  <section id="uploadStage">
+    <label id="dropzone" for="fileInput">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p><strong>Drop a photo</strong> or click to choose</p>
+      <input id="fileInput" type="file" accept="image/*" hidden />
+    </label>
+    <button id="sampleBtn" class="link-btn">or try a sample</button>
+    <p class="sub">This builds a brick character in your photo's colours.<br />
+      For the real shape of your face, try the <a id="siblingLink" href="#">likeness builder →</a></p>
+  </section>
+
+  <!-- Build -->
+  <main id="buildStage" class="hidden">
+    <canvas id="scene"></canvas>
+
+    <div id="loading" class="hidden"><span class="spinner"></span></div>
+
+    <div id="dock">
+      <div class="swatches" id="swatches"></div>
+      <span class="divider"></span>
+      <div class="poses" id="poses">
+        <button class="pose-btn is-active" data-pose="stand" title="Stand">Stand</button>
+        <button class="pose-btn" data-pose="point" title="Point">Point</button>
+        <button class="pose-btn" data-pose="cheer" title="Cheer">Cheer</button>
+      </div>
+      <span class="divider"></span>
+      <button id="replayBtn" class="icon-btn" title="Replay build">Rebuild</button>
+      <button id="shotBtn" class="icon-btn" title="Save image">Save</button>
+      <button id="newBtn" class="icon-btn" title="New photo">New</button>
+    </div>
+
+    <p id="brickTally"></p>
+  </main>
+
+  <div id="palettePop" class="hidden"></div>
+  <canvas id="sourceCanvas" hidden></canvas>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
