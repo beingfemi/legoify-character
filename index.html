@@ -9,27 +9,10 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Upload -->
-  <section id="uploadStage">
-    <label id="dropzone" for="fileInput">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <p><strong>Drop a photo</strong> or click to choose</p>
-      <input id="fileInput" type="file" accept="image/*" hidden />
-    </label>
-    <button id="sampleBtn" class="link-btn">or try a sample</button>
-    <p class="sub">This builds a brick character in your photo's colours.<br />
-      For the real shape of your face, try the
-      <a href="https://legoify-likeness.vercel.app">likeness builder →</a></p>
-  </section>
-
-  <!-- Build -->
-  <main id="buildStage" class="hidden">
+  <main id="buildStage">
     <canvas id="scene"></canvas>
 
-    <div id="loading" class="hidden"><span class="spinner"></span></div>
+    <div id="loading"><span class="spinner"></span></div>
 
     <div id="dock">
       <div class="swatches" id="swatches"></div>
@@ -40,12 +23,14 @@
         <button class="pose-btn" data-pose="cheer" title="Cheer">Cheer</button>
       </div>
       <span class="divider"></span>
-      <button id="replayBtn" class="icon-btn" title="Replay build">Rebuild</button>
+      <button id="replayBtn" class="icon-btn" title="Replay the build">Rebuild</button>
+      <button id="photoBtn" class="icon-btn" title="Take the colours from a photo">Photo</button>
       <button id="shotBtn" class="icon-btn" title="Save image">Save</button>
-      <button id="newBtn" class="icon-btn" title="New photo">New</button>
     </div>
 
     <p id="brickTally"></p>
+    <a id="siblingLink" href="https://legoify-likeness.vercel.app">likeness builder →</a>
+    <input id="fileInput" type="file" accept="image/*" hidden />
   </main>
 
   <div id="palettePop" class="hidden"></div>

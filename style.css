@@ -18,59 +18,15 @@ html, body {
 
 .hidden { display: none !important; }
 
-/* ---------- Upload ---------- */
-#uploadStage {
+#siblingLink {
   position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
-#dropzone {
-  width: min(420px, 82vw);
-  padding: 44px 24px;
-  border: 1px dashed var(--line);
-  border-radius: 16px;
-  text-align: center;
-  cursor: pointer;
+  top: 18px;
+  right: 20px;
+  font-size: .76rem;
   color: var(--ink-dim);
-  transition: border-color .15s, color .15s;
+  text-decoration: none;
 }
-#dropzone:hover,
-#dropzone.dragover { border-color: var(--ink); color: var(--ink); }
-#dropzone p { margin: 10px 0 0; font-size: .92rem; font-weight: 400; }
-#dropzone strong { font-weight: 600; color: var(--ink); }
-
-.link-btn {
-  background: none;
-  border: 0;
-  color: var(--ink-dim);
-  font-size: .85rem;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.link-btn:hover { color: var(--ink); }
-
-.sub {
-  margin: 2px 0 0;
-  text-align: center;
-  font-size: .8rem;
-  line-height: 1.55;
-  color: var(--ink-dim);
-  max-width: 420px;
-}
-.sub a, a.link-btn {
-  color: var(--ink);
-  text-underline-offset: 3px;
-}
-
-/* Slider controls in the dock */
-
-/* Depth-map thumbnail */
+#siblingLink:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
 
 /* ---------- Build ---------- */

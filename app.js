@@ -245,9 +245,6 @@ function buildEyes(anchors) {
 // ─────────────────────────── UI ───────────────────────────
 let scene = null;
 
-const uploadStage = document.getElementById("uploadStage");
-const buildStage = document.getElementById("buildStage");
-const dropzone = document.getElementById("dropzone");
 const fileInput = document.getElementById("fileInput");
 const swatchesEl = document.getElementById("swatches");
 const popEl = document.getElementById("palettePop");
@@ -292,42 +289,31 @@ function rebuild() {
   tallyEl.textContent = `${n.toLocaleString()} bricks`;
 }
 
-function enterBuild() {
-  uploadStage.classList.add("hidden");
-  buildStage.classList.remove("hidden");
-  loadingEl.classList.remove("hidden");
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    if (!scene) scene = new BrickScene(document.getElementById("scene"));
-    else scene.resize();
-    rebuild();
-    loadingEl.classList.add("hidden");
-  }));
-}
-
+// Optional: lift the palette off a photo. The colours are all editable by hand,
+// so this is a shortcut, never a gate.
 function handleFile(file) {
   const fr = new FileReader();
   fr.onload = (e) => {
     const img = new Image();
-    img.onload = () => { readColorsFromImage(img); enterBuild(); };
+    img.onload = () => { readColorsFromImage(img); rebuild(); };
     img.src = e.target.result;
   };
   fr.readAsDataURL(file);
 }
 
-fileInput.addEventListener("change", (e) => e.target.files[0] && handleFile(e.target.files[0]));
-["dragenter", "dragover"].forEach((ev) =>
-  dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add("dragover"); }));
-["dragleave", "drop"].forEach((ev) =>
-  dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove("dragover"); }));
-dropzone.addEventListener("drop", (e) => {
-  const f = e.dataTransfer.files[0];
-  if (f?.type.startsWith("image/")) handleFile(f);
+fileInput.addEventListener("change", (e) => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+  e.target.value = "";
 });
+document.getElementById("photoBtn").addEventListener("click", () => fileInput.click());
 
-document.getElementById("sampleBtn").addEventListener("click", () => {
-  COLORS = { hair: 0x5c3c2e, skin: 0xd0956a, shirt: 0xc4281c, pants: 0x1e2f5c, shoe: 0x1b1b1b };
-  renderSwatches();
-  enterBuild();
+// Dropping a photo anywhere on the page does the same thing.
+["dragenter", "dragover"].forEach((ev) =>
+  addEventListener(ev, (e) => e.preventDefault()));
+addEventListener("drop", (e) => {
+  e.preventDefault();
+  const f = e.dataTransfer?.files[0];
+  if (f?.type.startsWith("image/")) handleFile(f);
 });
 
 document.getElementById("poses").addEventListener("click", (e) => {
@@ -340,10 +326,11 @@ document.getElementById("poses").addEventListener("click", (e) => {
 
 document.getElementById("replayBtn").addEventListener("click", () => scene?.replay());
 document.getElementById("shotBtn").addEventListener("click", () => scene?.snapshot("legoify-character.png"));
-document.getElementById("newBtn").addEventListener("click", () => {
-  buildStage.classList.add("hidden");
-  uploadStage.classList.remove("hidden");
-  fileInput.value = "";
-});
 
+// Straight into the character — no upload step to get past.
 renderSwatches();
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  scene = new BrickScene(document.getElementById("scene"));
+  rebuild();
+  loadingEl.classList.add("hidden");
+}));
