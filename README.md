@@ -6,15 +6,43 @@ It opens straight on the character — there's no upload step. The figure is a
 procedural humanoid volume — capsules and ellipsoids for legs, hips, torso,
 arms, neck and head — voxelised onto a grid and rebuilt brick by brick.
 
-A photo is **optional**: hit **Photo** (or drop an image anywhere on the page)
-and hair, skin, shirt and trouser colours are read from four regions of it and
-snapped to the nearest real LEGO colour. It's a shortcut for picking four
-colours you can already set by hand, so it was never worth gating the app
-behind.
+## What you can change
 
-Stand / point / cheer poses, and every body part is recolourable from the
-palette. Eyes are printed round tiles (a canvas-generated texture on a cylinder
-cap) with iris, pupil and catchlight.
+| | Options |
+|---|---|
+| **Skin** | 8 tones, light through deep |
+| **Hair** | none, short, curls, afro, long, ponytail, bun, locs, headwrap — in 14 colours |
+| **Body** | slim, athletic, curvy, broad, round |
+| **Top** | tee, long sleeve, tank, hoodie, jacket |
+| **Bottom** | trousers, shorts, skirt, dress |
+| **Extras** | glasses, beard |
+| **Pose** | stand, point, cheer |
+
+**Shuffle** rolls a random character. That's 1,800 shape combinations before
+colour, and every one is verified to build.
+
+### On the design of these options
+
+Every axis is independent — nothing is gated behind a gender, and no
+combination is disallowed. Silhouettes are named for shape (`curvy`, `broad`)
+rather than for who is supposed to wear them, so any body can take any hair and
+any clothing. Skin is a spread of tones rather than a set of categories.
+`headwrap` is included so head coverings are a first-class option rather than
+an omission.
+
+Body silhouettes vary shoulder, chest, waist and hip **independently**, so the
+torso profile is a three-point curve (hip → waist → chest) rather than a single
+taper.
+
+A photo is **optional**: hit **Photo** (or drop an image anywhere on the page)
+and skin, hair, top and bottom colours are read from four regions of it. Skin
+and hair snap to their own palettes rather than the full brick set, so a photo
+can't produce an implausible skin tone.
+
+Eyes are printed round tiles (a canvas-generated texture on a cylinder cap)
+with iris, pupil and catchlight; glasses are real geometry. Every hairstyle is
+masked against a face zone, so hair can never cover the eyes — the build sweep
+asserts all 1,800 combinations still yield exactly two eye anchors.
 
 > Sibling project: **[Legoify Likeness](https://github.com/beingfemi/legoify-likeness)**
 > runs a depth model to rebuild the photo's *actual* 3D shape.
