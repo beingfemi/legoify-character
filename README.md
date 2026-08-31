@@ -1,6 +1,6 @@
 # Legoify Character
 
-Turn a photo into a 3D brick-built LEGO character you can spin around.
+A 3D brick-built LEGO character you can pose, recolour and spin around.
 
 It opens straight on the character — there's no upload step. The figure is a
 procedural humanoid volume — capsules and ellipsoids for legs, hips, torso,
