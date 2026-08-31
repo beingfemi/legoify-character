@@ -266,7 +266,7 @@ export function buildCharacter(c) {
 
         // ---- hair + beard ----
         if (!isFaceZone(x, y, z) && hairAt(x, y, z, c.hair)) col = c.hairColor;
-        if (c.beard && inHead(x, y, z, 0.45) && y >= 40.6 && y <= 45.6 && z >= 0.4) {
+        if (c.beard && inHead(x, y, z, 0.45) && y >= 40.6 && y <= 44.9 && z >= 0.4) {
           col = c.hairColor;
         }
 
