@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Legoify Character</title>
-  <meta name="description" content="Turn a photo into a 3D brick-built LEGO character you can spin around." />
+  <meta name="description" content="Build a 3D brick-built LEGO character — skin tone, hair, body, clothes — and spin it around." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%23c8511b%22/><circle cx=%2230%22 cy=%2232%22 r=%2211%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22/><circle cx=%2270%22 cy=%2232%22 r=%2211%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22/></svg>" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -14,15 +14,55 @@
 
     <div id="loading"><span class="spinner"></span></div>
 
+    <button id="panelToggle" aria-label="Toggle options">Options</button>
+
+    <aside id="panel">
+      <section class="grp">
+        <h2>Skin</h2>
+        <div class="row" id="skinRow"></div>
+      </section>
+
+      <section class="grp">
+        <h2>Hair</h2>
+        <div class="row pills" id="hairRow"></div>
+        <div class="row" id="hairColorRow"></div>
+      </section>
+
+      <section class="grp">
+        <h2>Body</h2>
+        <div class="row pills" id="bodyRow"></div>
+      </section>
+
+      <section class="grp">
+        <h2>Top</h2>
+        <div class="row pills" id="topRow"></div>
+        <div class="row" id="topColorRow"></div>
+      </section>
+
+      <section class="grp">
+        <h2>Bottom</h2>
+        <div class="row pills" id="bottomRow"></div>
+        <div class="row" id="bottomColorRow"></div>
+      </section>
+
+      <section class="grp">
+        <h2>Shoes</h2>
+        <div class="row" id="shoeColorRow"></div>
+      </section>
+
+      <section class="grp">
+        <h2>Extras</h2>
+        <div class="row pills" id="extrasRow">
+          <button class="pill" data-flag="glasses">Glasses</button>
+          <button class="pill" data-flag="beard">Beard</button>
+        </div>
+      </section>
+    </aside>
+
     <div id="dock">
-      <div class="swatches" id="swatches"></div>
+      <div class="poses pills" id="poseRow"></div>
       <span class="divider"></span>
-      <div class="poses" id="poses">
-        <button class="pose-btn is-active" data-pose="stand" title="Stand">Stand</button>
-        <button class="pose-btn" data-pose="point" title="Point">Point</button>
-        <button class="pose-btn" data-pose="cheer" title="Cheer">Cheer</button>
-      </div>
-      <span class="divider"></span>
+      <button id="shuffleBtn" class="icon-btn" title="Random character">Shuffle</button>
       <button id="replayBtn" class="icon-btn" title="Replay the build">Rebuild</button>
       <button id="photoBtn" class="icon-btn" title="Take the colours from a photo">Photo</button>
       <button id="shotBtn" class="icon-btn" title="Save image">Save</button>
@@ -33,7 +73,6 @@
     <input id="fileInput" type="file" accept="image/*" hidden />
   </main>
 
-  <div id="palettePop" class="hidden"></div>
   <canvas id="sourceCanvas" hidden></canvas>
 
   <script type="importmap">

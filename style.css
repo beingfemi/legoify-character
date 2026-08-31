@@ -28,6 +28,87 @@ html, body {
 }
 #siblingLink:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
+/* ---------- Options panel ---------- */
+#panelToggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 12;
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 15px;
+  font-size: .8rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+#panelToggle:hover { border-color: var(--ink); }
+
+#panel {
+  position: fixed;
+  top: 58px;
+  left: 16px;
+  bottom: 92px;
+  width: 244px;
+  z-index: 11;
+  padding: 6px 14px 14px;
+  overflow-y: auto;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  scrollbar-width: thin;
+}
+/* hidden by default on narrow screens, always shown on wide ones */
+#panel { display: none; }
+body.panel-open #panel { display: block; }
+
+.grp { margin-top: 14px; }
+.grp h2 {
+  margin: 0 0 7px;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.row { display: flex; flex-wrap: wrap; gap: 5px; }
+.row + .row { margin-top: 7px; }
+
+.sw {
+  width: 21px;
+  height: 21px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,.16);
+  padding: 0;
+  cursor: pointer;
+  transition: transform .12s;
+}
+.sw:hover { transform: scale(1.14); }
+.sw.on {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.pill {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: .74rem;
+  color: var(--ink-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pill:hover { border-color: var(--ink); color: var(--ink); }
+.pill.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+@media (min-width: 900px) {
+  #panelToggle { display: none; }
+  #panel { display: block; top: 16px; }
+}
 
 /* ---------- Build ---------- */
 #buildStage { position: fixed; inset: 0; }

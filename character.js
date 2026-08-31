@@ -167,9 +167,18 @@ export function buildCharacter(c) {
   const isDress = c.bottom === "dress";
   const skirted = isDress || c.bottom === "skirt";
   const skirtColor = isDress ? c.topColor : c.bottomColor;
-  const sleeve = { "tee": 0.34, "long sleeve": 0.95, "tank": 0.0, "hoodie": 0.97, "jacket": 0.95 }[c.top] ?? 0.34;
+  // how far the sleeve runs down the upper and lower arm, each 0..1
+  const SLEEVE = {
+    "tee":         [0.55, 0],
+    "long sleeve": [1.0, 0.92],
+    "tank":        [0, 0],
+    "hoodie":      [1.0, 0.95],
+    "jacket":      [1.0, 0.90],
+  };
+  const [slvUp, slvLo] = SLEEVE[c.top] ?? SLEEVE.tee;
   const legX = Math.max(2.6, b.hip * 0.52);
-  const bareLegFrom = c.bottom === "shorts" ? 13.5 : skirted ? 21.0 : -1;
+  // legs are bare below this height (shorts stop at the knee, skirts expose all)
+  const bareBelow = c.bottom === "shorts" ? 14.0 : skirted ? HIP_Y : -1;
 
   for (let ix = -GRID.X; ix <= GRID.X; ix++) {
     for (let iy = 0; iy <= GRID.Y; iy++) {
@@ -180,9 +189,7 @@ export function buildCharacter(c) {
         // ---- legs ----
         for (const sx of [-legX, legX]) {
           if (distToSegment(x, y, z, sx, HIP_Y, 0, sx, 4.2, 0) <= b.legR) {
-            col = y >= bareLegFrom && bareLegFrom >= 0 ? c.skin : c.bottomColor;
-            if (bareLegFrom >= 0 && y >= bareLegFrom) col = c.skin;
-            else col = c.bottomColor;
+            col = (bareBelow >= 0 && y < bareBelow) ? c.skin : c.bottomColor;
           }
         }
         // feet
@@ -208,10 +215,10 @@ export function buildCharacter(c) {
           const rx = torsoRX(y, b);
           const rz = rx * b.depth;
           if ((x / rx) ** 2 + (z / rz) ** 2 <= 1) {
-            col = isDress ? c.topColor : c.topColor;
+            col = c.topColor;
             // a tank leaves the shoulders and upper chest bare but for two straps
             if (c.top === "tank" && y >= 34.5) {
-              const strap = Math.abs(Math.abs(x) - 3.0) <= 1.15 && z <= 0.6;
+              const strap = Math.abs(Math.abs(x) - 3.0) <= 1.15;
               col = strap ? c.topColor : c.skin;
             }
             // an open jacket front, in a deeper shade
@@ -235,15 +242,16 @@ export function buildCharacter(c) {
           const dLo = distToSegment(x, y, z, ex, ey, ez, hand[0], hand[1], hand[2]);
           const rUp = b.armR + 0.45, rLo = b.armR + 0.1;
 
-          if (dUp <= rUp) col = sleeve >= 0.5 ? c.topColor : (sleeve > 0 ? c.topColor : c.skin);
-          if (dLo <= rLo) col = c.skin;
-          // sleeve running down the lower arm for longer styles
-          if (sleeve > 0.5 && dLo <= rLo) {
-            const t = segT(x, y, z, ex, ey, ez, hand[0], hand[1], hand[2]);
-            if (t <= (sleeve - 0.5) * 2) col = c.topColor;
+          if (dUp <= rUp) {
+            const t = segT(x, y, z, sx, SHOULDER_Y, 0, ex, ey, ez);
+            col = t <= slvUp ? c.topColor : c.skin;
           }
-          if (sleeve === 0 && dUp <= rUp) col = c.skin;
-          if (ellip(x, y, z, hand[0], hand[1], hand[2], b.armR + 0.55, b.armR + 0.55, b.armR + 0.55)) col = c.skin;
+          if (dLo <= rLo) {
+            const t = segT(x, y, z, ex, ey, ez, hand[0], hand[1], hand[2]);
+            col = t <= slvLo ? c.topColor : c.skin;
+          }
+          const hr = b.armR + 0.55;
+          if (ellip(x, y, z, hand[0], hand[1], hand[2], hr, hr, hr)) col = c.skin;
         }
 
         // ---- neck + head ----

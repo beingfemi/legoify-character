@@ -1,211 +1,44 @@
-// Photo → a brick-built LEGO character.
-// The photo supplies the palette; the figure is a procedural humanoid volume.
+// UI wiring for the character builder.
 import * as THREE from "three";
-import { BrickScene, PALETTE, snapToLego, BH } from "./brickscene.js";
+import { BrickScene, snapToLego } from "./brickscene.js";
+import {
+  OPTIONS, SKIN_TONES, HAIR_COLORS, DEFAULT_CHAR,
+  buildCharacter, randomCharacter,
+} from "./character.js";
 
-// Character colours, sampled from the photo (and user-editable).
-let COLORS = { hair: 0x5c3c2e, skin: 0xd0956a, shirt: 0xc4281c, pants: 0x1e2f5c, shoe: 0x1b1b1b };
-const SWATCH_KEYS = ["hair", "skin", "shirt", "pants", "shoe"];
-const SWATCH_LABELS = { hair: "Hair", skin: "Skin", shirt: "Shirt", pants: "Legs", shoe: "Shoes" };
-const EYE = 0x1b1b1b;
+const CLOTH_COLORS = [
+  0xf4f4f4, 0xe6e3da, 0xc9cbc8, 0xa3a2a4, 0x635f61, 0x2b2b2c, 0x1b1b1b,
+  0xc4281c, 0x7c0a02, 0xe3691c, 0xb04a2f, 0xf5c400, 0xfbe6a2, 0x237841,
+  0x4b9f4c, 0x789082, 0x0055bf, 0x4c7fd6, 0x1e2f5c, 0x7a4bab, 0x923978,
+  0xe4adc8, 0xd0956a, 0xe4cd9e, 0xaa7f56, 0x5c3c2e,
+];
 
-// ─────────────────── Photo → character colours ───────────────────
-const srcCanvas = document.getElementById("sourceCanvas");
+let CHAR = { ...DEFAULT_CHAR };
+let scene = null;
 
-// Most-common LEGO colour inside a normalised region of the image.
-function dominantIn(data, W, H, x0, y0, x1, y1) {
-  const counts = new Map();
-  const ax = Math.floor(x0 * W), bx = Math.ceil(x1 * W);
-  const ay = Math.floor(y0 * H), by = Math.ceil(y1 * H);
-  for (let y = ay; y < by; y++) {
-    for (let x = ax; x < bx; x++) {
-      const i = (y * W + x) * 4;
-      if (data[i + 3] < 40) continue;
-      const hex = snapToLego(data[i], data[i + 1], data[i + 2]);
-      counts.set(hex, (counts.get(hex) || 0) + 1);
-    }
-  }
-  let best = null, bc = -1;
-  for (const [hex, n] of counts) if (n > bc) { bc = n; best = hex; }
-  return best;
-}
+const hex = (h) => "#" + h.toString(16).padStart(6, "0");
+const loadingEl = document.getElementById("loading");
+const tallyEl = document.getElementById("brickTally");
+const fileInput = document.getElementById("fileInput");
 
-function readColorsFromImage(img) {
-  const S = 128;
-  const ctx = srcCanvas.getContext("2d", { willReadFrequently: true });
-  const side = Math.min(img.width, img.height);
-  srcCanvas.width = S; srcCanvas.height = S;
-  ctx.clearRect(0, 0, S, S);
-  ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
-  const { data } = ctx.getImageData(0, 0, S, S);
-
-  const hair  = dominantIn(data, S, S, 0.30, 0.06, 0.70, 0.20);
-  const skin  = dominantIn(data, S, S, 0.36, 0.32, 0.64, 0.50);
-  const shirt = dominantIn(data, S, S, 0.22, 0.72, 0.78, 0.94);
-  let pants   = dominantIn(data, S, S, 0.30, 0.94, 0.70, 1.00);
-  if (pants === shirt) pants = 0x1e2f5c;
-
-  COLORS = { hair, skin, shirt, pants, shoe: 0x1b1b1b };
-  renderSwatches();
-}
-
-// ─────────────────────── Geometry helpers ───────────────────────
-const pa = new THREE.Vector3(), pb = new THREE.Vector3(), pab = new THREE.Vector3();
-
-function distToSegment(px, py, pz, ax, ay, az, bx, by, bz) {
-  pa.set(px - ax, py - ay, pz - az);
-  pab.set(bx - ax, by - ay, bz - az);
-  const len2 = pab.lengthSq();
-  const t = len2 === 0 ? 0 : THREE.MathUtils.clamp(pa.dot(pab) / len2, 0, 1);
-  pb.copy(pab).multiplyScalar(t);
-  return pa.sub(pb).length();
-}
-
-const inEllipsoid = (px, py, pz, cx, cy, cz, rx, ry, rz) =>
-  ((px - cx) / rx) ** 2 + ((py - cy) / ry) ** 2 + ((pz - cz) / rz) ** 2 <= 1;
-
-// ─────────────────────── Character model ───────────────────────
-// Grid indices; world = (ix, iy*BH, iz). Figure stands on y = 0.
-const GX = 16, GY = 48, GZ = 11;
-
-const SHOULDER_Y = 37.6;
-const SHOULDER_X = 7.2;
-
-const POSES = {
-  stand: { L: [-9.6, 24.5, 1.0], R: [9.6, 24.5, 1.0] },
-  point: { L: [-9.6, 24.5, 1.0], R: [11.8, 55.0, 1.8] },
-  cheer: { L: [-11.8, 55.0, 1.8], R: [11.8, 55.0, 1.8] },
-};
-let currentPose = "stand";
-
-function buildVoxels() {
-  const vox = new Map();
-  const key = (x, y, z) => `${x},${y},${z}`;
-  const hands = POSES[currentPose];
-
-  const arms = [
-    { sx: -SHOULDER_X, hand: hands.L },
-    { sx: SHOULDER_X, hand: hands.R },
-  ];
-
-  for (let ix = -GX; ix <= GX; ix++) {
-    for (let iy = 0; iy <= GY; iy++) {
-      for (let iz = -GZ; iz <= GZ; iz++) {
-        const x = ix, y = iy * BH, z = iz;
-        let c = null;
-
-        // legs — kept far enough apart to leave a real gap
-        for (const sx of [-3.9, 3.9]) {
-          if (distToSegment(x, y, z, sx, 22.0, 0, sx, 4.2, 0) <= 2.9) c = COLORS.pants;
-        }
-        // feet
-        for (const sx of [-3.9, 3.9]) {
-          if (inEllipsoid(x, y, z, sx, 1.8, 1.8, 3.0, 1.9, 4.7)) c = COLORS.shoe;
-        }
-        // hips
-        if (inEllipsoid(x, y, z, 0, 22.6, 0, 6.0, 4.0, 4.3)) c = COLORS.pants;
-
-        // torso — tapered ellipse per height
-        if (y >= 23.0 && y <= 38.8) {
-          const t = (y - 23.0) / 15.8;
-          const rx = THREE.MathUtils.lerp(5.4, 7.5, t);
-          const rz = THREE.MathUtils.lerp(3.9, 5.1, t);
-          if ((x / rx) ** 2 + (z / rz) ** 2 <= 1) c = COLORS.shirt;
-        }
-
-        // arms — shoulder → elbow → hand, sleeve on the upper half
-        for (const { sx, hand } of arms) {
-          const ex = (sx + hand[0]) / 2 + Math.sign(sx) * 1.4;
-          const ey = (SHOULDER_Y + hand[1]) / 2;
-          const ez = hand[2] / 2;
-          const dUp = distToSegment(x, y, z, sx, SHOULDER_Y, 0, ex, ey, ez);
-          const dLo = distToSegment(x, y, z, ex, ey, ez, hand[0], hand[1], hand[2]);
-          if (dUp <= 2.6) c = COLORS.shirt;
-          if (dLo <= 2.25) c = COLORS.skin;
-          if (inEllipsoid(x, y, z, hand[0], hand[1], hand[2], 2.7, 2.7, 2.7)) c = COLORS.skin;
-        }
-
-        // neck + head
-        if (distToSegment(x, y, z, 0, 38.6, 0, 0, 42.4, 0) <= 2.9) c = COLORS.skin;
-        if (inEllipsoid(x, y, z, 0, 47.4, 0, 6.9, 7.4, 6.6)) {
-          c = COLORS.skin;
-          // hair: crown + back, wrapping down the sides but never over the face
-          const crown = y >= 49.6;
-          const back = z <= -2.2 && y >= 44.0;
-          const sides = Math.abs(x) >= 5.2 && z <= 1.6 && y >= 44.5;
-          if (crown || back || sides) c = COLORS.hair;
-        }
-
-        if (c !== null) vox.set(key(ix, iy, iz), c);
-      }
-    }
-  }
-
-  const eyes = addFace(vox, key);
-  return { vox, eyes };
-}
-
-// Brow, nose and mouth are brick; the eyes come back as anchors so they can be
-// built as printed round tiles instead of flat blocks.
-function addFace(vox, key) {
-  const frontmost = (ix, iy) => {
-    for (let iz = GZ; iz >= -GZ; iz--) if (vox.has(key(ix, iy, iz))) return iz;
-    return null;
-  };
-  const row = (worldY) => Math.round(worldY / BH);
-
-  const eyeRow = row(48.4);
-  const eyes = [];
-  for (const cx of [-3.5, 3.5]) {
-    const a = frontmost(Math.round(cx - 0.5), eyeRow);
-    const b = frontmost(Math.round(cx + 0.5), eyeRow);
-    if (a === null && b === null) continue;
-    // sit against the shallower of the two columns so the tile looks seated
-    const iz = Math.min(a ?? b, b ?? a);
-    eyes.push({ x: cx, y: eyeRow * BH + BH / 2, z: iz + 0.5 });
-  }
-
-  // brow, two rows up
-  const browRow = eyeRow + 2;
-  for (const ix of [-4, -3, 3, 4]) {
-    const iz = frontmost(ix, browRow);
-    if (iz !== null) vox.set(key(ix, browRow, iz), COLORS.hair);
-  }
-
-  const noseRow = row(46.0);
-  const noseZ = frontmost(0, noseRow);
-  if (noseZ !== null) vox.set(key(0, noseRow, noseZ + 1), COLORS.skin);
-
-  const mouthRow = row(43.0);
-  for (const ix of [-1, 0, 1]) {
-    const iz = frontmost(ix, mouthRow);
-    if (iz !== null) vox.set(key(ix, mouthRow, iz), 0x5c3c2e);
-  }
-  return eyes;
-}
-
-// ─────────────────── Printed eye tiles ───────────────────
+// ─────────────────── printed eyes & glasses ───────────────────
 let eyeTexture = null;
 
 function makeEyeTexture() {
   const c = document.createElement("canvas");
   c.width = c.height = 256;
   const g = c.getContext("2d");
-
-  g.fillStyle = "#f6f5f2";                      // sclera
+  g.fillStyle = "#f6f5f2";
   g.beginPath(); g.arc(128, 128, 126, 0, 7); g.fill();
-
-  g.fillStyle = "#3f2a1b";                      // iris
+  g.fillStyle = "#3f2a1b";
   g.beginPath(); g.arc(128, 134, 62, 0, 7); g.fill();
-  g.fillStyle = "#0d0d0d";                      // pupil
+  g.fillStyle = "#0d0d0d";
   g.beginPath(); g.arc(128, 134, 31, 0, 7); g.fill();
-
-  g.fillStyle = "rgba(255,255,255,.92)";        // catchlight
+  g.fillStyle = "rgba(255,255,255,.92)";
   g.beginPath(); g.arc(104, 104, 22, 0, 7); g.fill();
   g.fillStyle = "rgba(255,255,255,.5)";
   g.beginPath(); g.arc(150, 158, 9, 0, 7); g.fill();
-
-  g.strokeStyle = "rgba(0,0,0,.22)";            // moulded rim
+  g.strokeStyle = "rgba(0,0,0,.22)";
   g.lineWidth = 9;
   g.beginPath(); g.arc(128, 128, 121, 0, 7); g.stroke();
 
@@ -215,15 +48,14 @@ function makeEyeTexture() {
   return t;
 }
 
-function buildEyes(anchors) {
+function buildDetails(anchors) {
   if (!anchors.length) return null;
   if (!eyeTexture) eyeTexture = makeEyeTexture();
-
   const group = new THREE.Group();
-  const R = 0.85, D = 0.26;
-  const geo = new THREE.CylinderGeometry(R, R, D, 32);
-  geo.rotateX(Math.PI / 2);                     // cap faces +Z, like a printed tile
 
+  const R = 0.85, D = 0.26;
+  const eyeGeo = new THREE.CylinderGeometry(R, R, D, 32);
+  eyeGeo.rotateX(Math.PI / 2);
   const rim = new THREE.MeshPhysicalMaterial({
     color: 0xf4f4f4, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.12,
   });
@@ -233,69 +65,167 @@ function buildEyes(anchors) {
   });
 
   for (const a of anchors) {
-    // [side, +cap, -cap] for a cylinder
-    const m = new THREE.Mesh(geo, [rim, printed, rim]);
+    const m = new THREE.Mesh(eyeGeo, [rim, printed, rim]);
     m.position.set(a.x, a.y, a.z + D / 2 - 0.04);
     m.castShadow = m.receiveShadow = true;
     group.add(m);
   }
+
+  if (CHAR.glasses) {
+    const frame = new THREE.MeshPhysicalMaterial({
+      color: 0x1b1b1b, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.1,
+    });
+    const ringGeo = new THREE.TorusGeometry(1.18, 0.16, 10, 26);
+    const zFront = Math.max(...anchors.map((a) => a.z)) + 0.42;
+    const yEye = anchors[0].y;
+    for (const a of anchors) {
+      const ring = new THREE.Mesh(ringGeo, frame);
+      ring.position.set(a.x, a.y, zFront);
+      ring.castShadow = true;
+      group.add(ring);
+    }
+    // bridge
+    const bridge = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.22, 0.22), frame);
+    bridge.position.set(0, yEye + 0.35, zFront);
+    group.add(bridge);
+    // temple arms
+    for (const s of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 4.2), frame);
+      arm.position.set(s * 5.4, yEye + 0.2, zFront - 2.1);
+      group.add(arm);
+    }
+  }
   return group;
 }
 
-// ─────────────────────────── UI ───────────────────────────
-let scene = null;
-
-const fileInput = document.getElementById("fileInput");
-const swatchesEl = document.getElementById("swatches");
-const popEl = document.getElementById("palettePop");
-const loadingEl = document.getElementById("loading");
-const tallyEl = document.getElementById("brickTally");
-
-function renderSwatches() {
-  swatchesEl.innerHTML = "";
-  for (const k of SWATCH_KEYS) {
-    const b = document.createElement("button");
-    b.className = "swatch";
-    b.style.background = "#" + COLORS[k].toString(16).padStart(6, "0");
-    b.title = SWATCH_LABELS[k];
-    b.addEventListener("click", (e) => { e.stopPropagation(); openPalette(b, k); });
-    swatchesEl.appendChild(b);
-  }
-}
-
-function openPalette(anchor, slot) {
-  popEl.innerHTML = "";
-  for (const hex of PALETTE) {
-    const b = document.createElement("button");
-    b.style.background = "#" + hex.toString(16).padStart(6, "0");
-    b.addEventListener("click", () => {
-      COLORS[slot] = hex;
-      renderSwatches();
-      popEl.classList.add("hidden");
-      rebuild();
-    });
-    popEl.appendChild(b);
-  }
-  popEl.classList.remove("hidden");
-  const r = anchor.getBoundingClientRect();
-  popEl.style.left = Math.max(8, Math.min(r.left - 60, innerWidth - 200)) + "px";
-  popEl.style.top = r.top - popEl.offsetHeight - 10 + "px";
-}
-addEventListener("click", () => popEl.classList.add("hidden"));
-
+// ─────────────────── build ───────────────────
 function rebuild() {
-  const { vox, eyes } = buildVoxels();
-  const n = scene.setVoxels(vox, buildEyes(eyes));
+  const { vox, eyes } = buildCharacter(CHAR);
+  const n = scene.setVoxels(vox, buildDetails(eyes));
   tallyEl.textContent = `${n.toLocaleString()} bricks`;
 }
 
-// Optional: lift the palette off a photo. The colours are all editable by hand,
-// so this is a shortcut, never a gate.
+// ─────────────────── panel controls ───────────────────
+function swatchRow(el, colors, getSel, onPick) {
+  el.innerHTML = "";
+  for (const c of colors) {
+    const b = document.createElement("button");
+    b.className = "sw";
+    b.style.background = hex(c);
+    b.title = hex(c);
+    if (c === getSel()) b.classList.add("on");
+    b.addEventListener("click", () => { onPick(c); syncUI(); rebuild(); });
+    el.appendChild(b);
+  }
+}
+
+function pillRow(el, values, getSel, onPick) {
+  el.innerHTML = "";
+  for (const v of values) {
+    const b = document.createElement("button");
+    b.className = "pill";
+    b.textContent = v;
+    if (v === getSel()) b.classList.add("on");
+    b.addEventListener("click", () => { onPick(v); syncUI(); rebuild(); });
+    el.appendChild(b);
+  }
+}
+
+const $ = (id) => document.getElementById(id);
+
+function syncUI() {
+  swatchRow($("skinRow"), SKIN_TONES, () => CHAR.skin, (c) => (CHAR.skin = c));
+  swatchRow($("hairColorRow"), HAIR_COLORS, () => CHAR.hairColor, (c) => (CHAR.hairColor = c));
+  swatchRow($("topColorRow"), CLOTH_COLORS, () => CHAR.topColor, (c) => (CHAR.topColor = c));
+  swatchRow($("bottomColorRow"), CLOTH_COLORS, () => CHAR.bottomColor, (c) => (CHAR.bottomColor = c));
+  swatchRow($("shoeColorRow"), CLOTH_COLORS, () => CHAR.shoeColor, (c) => (CHAR.shoeColor = c));
+
+  pillRow($("hairRow"), OPTIONS.hair, () => CHAR.hair, (v) => (CHAR.hair = v));
+  pillRow($("bodyRow"), OPTIONS.body, () => CHAR.body, (v) => (CHAR.body = v));
+  pillRow($("topRow"), OPTIONS.top, () => CHAR.top, (v) => (CHAR.top = v));
+  pillRow($("bottomRow"), OPTIONS.bottom, () => CHAR.bottom, (v) => (CHAR.bottom = v));
+  pillRow($("poseRow"), OPTIONS.pose, () => CHAR.pose, (v) => (CHAR.pose = v));
+
+  for (const b of document.querySelectorAll("#extrasRow .pill")) {
+    b.classList.toggle("on", !!CHAR[b.dataset.flag]);
+  }
+}
+
+$("extrasRow").addEventListener("click", (e) => {
+  const b = e.target.closest(".pill");
+  if (!b) return;
+  CHAR[b.dataset.flag] = !CHAR[b.dataset.flag];
+  syncUI();
+  rebuild();
+});
+
+$("shuffleBtn").addEventListener("click", () => {
+  CHAR = randomCharacter(CHAR);
+  syncUI();
+  rebuild();
+});
+
+$("panelToggle").addEventListener("click", () => {
+  document.body.classList.toggle("panel-open");
+});
+
+$("replayBtn").addEventListener("click", () => scene?.replay());
+$("shotBtn").addEventListener("click", () => scene?.snapshot("legoify-character.png"));
+
+// ─────────────────── optional: colours from a photo ───────────────────
+const srcCanvas = document.getElementById("sourceCanvas");
+
+function dominantIn(data, W, H, x0, y0, x1, y1, palette) {
+  const counts = new Map();
+  const ax = Math.floor(x0 * W), bx = Math.ceil(x1 * W);
+  const ay = Math.floor(y0 * H), by = Math.ceil(y1 * H);
+  for (let y = ay; y < by; y++) {
+    for (let x = ax; x < bx; x++) {
+      const i = (y * W + x) * 4;
+      if (data[i + 3] < 40) continue;
+      const c = palette ? nearestIn(palette, data[i], data[i + 1], data[i + 2])
+                        : snapToLego(data[i], data[i + 1], data[i + 2]);
+      counts.set(c, (counts.get(c) || 0) + 1);
+    }
+  }
+  let best = null, bc = -1;
+  for (const [c, n] of counts) if (n > bc) { bc = n; best = c; }
+  return best;
+}
+
+function nearestIn(palette, r, g, b) {
+  let best = palette[0], bd = Infinity;
+  for (const h of palette) {
+    const d = (r - ((h >> 16) & 255)) ** 2 + (g - ((h >> 8) & 255)) ** 2 + (b - (h & 255)) ** 2;
+    if (d < bd) { bd = d; best = h; }
+  }
+  return best;
+}
+
+function readColorsFromImage(img) {
+  const S = 128;
+  const ctx = srcCanvas.getContext("2d", { willReadFrequently: true });
+  const side = Math.min(img.width, img.height);
+  srcCanvas.width = srcCanvas.height = S;
+  ctx.clearRect(0, 0, S, S);
+  ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+  const { data } = ctx.getImageData(0, 0, S, S);
+
+  // skin and hair snap to their own palettes so they stay plausible
+  CHAR.skin = dominantIn(data, S, S, 0.36, 0.32, 0.64, 0.50, SKIN_TONES);
+  CHAR.hairColor = dominantIn(data, S, S, 0.30, 0.06, 0.70, 0.20, HAIR_COLORS);
+  CHAR.topColor = dominantIn(data, S, S, 0.22, 0.72, 0.78, 0.94, CLOTH_COLORS);
+  const pants = dominantIn(data, S, S, 0.30, 0.94, 0.70, 1.00, CLOTH_COLORS);
+  CHAR.bottomColor = pants === CHAR.topColor ? 0x1e2f5c : pants;
+  syncUI();
+  rebuild();
+}
+
 function handleFile(file) {
   const fr = new FileReader();
   fr.onload = (e) => {
     const img = new Image();
-    img.onload = () => { readColorsFromImage(img); rebuild(); };
+    img.onload = () => readColorsFromImage(img);
     img.src = e.target.result;
   };
   fr.readAsDataURL(file);
@@ -305,30 +235,17 @@ fileInput.addEventListener("change", (e) => {
   if (e.target.files[0]) handleFile(e.target.files[0]);
   e.target.value = "";
 });
-document.getElementById("photoBtn").addEventListener("click", () => fileInput.click());
+$("photoBtn").addEventListener("click", () => fileInput.click());
 
-// Dropping a photo anywhere on the page does the same thing.
-["dragenter", "dragover"].forEach((ev) =>
-  addEventListener(ev, (e) => e.preventDefault()));
+["dragenter", "dragover"].forEach((ev) => addEventListener(ev, (e) => e.preventDefault()));
 addEventListener("drop", (e) => {
   e.preventDefault();
   const f = e.dataTransfer?.files[0];
   if (f?.type.startsWith("image/")) handleFile(f);
 });
 
-document.getElementById("poses").addEventListener("click", (e) => {
-  const btn = e.target.closest(".pose-btn");
-  if (!btn) return;
-  document.querySelectorAll(".pose-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
-  currentPose = btn.dataset.pose;
-  rebuild();
-});
-
-document.getElementById("replayBtn").addEventListener("click", () => scene?.replay());
-document.getElementById("shotBtn").addEventListener("click", () => scene?.snapshot("legoify-character.png"));
-
-// Straight into the character — no upload step to get past.
-renderSwatches();
+// ─────────────────── go ───────────────────
+syncUI();
 requestAnimationFrame(() => requestAnimationFrame(() => {
   scene = new BrickScene(document.getElementById("scene"));
   rebuild();
