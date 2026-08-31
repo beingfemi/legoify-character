@@ -47,7 +47,9 @@ export function snapToLego(r, g, b) {
 export const BW = 1.0;
 export const BH = 1.2;
 
-const brickPlain = new RoundedBoxGeometry(BW * 0.97, BH * 0.97, BW * 0.97, 3, 0.045).toNonIndexed();
+// RoundedBoxGeometry is already non-indexed; the stud is not, so only it needs
+// converting before the two can be merged.
+const brickPlain = new RoundedBoxGeometry(BW * 0.97, BH * 0.97, BW * 0.97, 3, 0.045);
 // Real studs taper very slightly and have a softened top edge.
 const studGeo = new THREE.CylinderGeometry(0.292, 0.303, 0.25, 24).toNonIndexed();
 studGeo.translate(0, BH * 0.485 + 0.115, 0);
