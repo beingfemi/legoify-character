@@ -2,11 +2,15 @@
 
 Turn a photo into a 3D brick-built LEGO character you can spin around.
 
-The photo supplies the **palette**, not the shape. Hair, skin, shirt and trouser
-colours are read from four regions of the image and snapped to the nearest real
-LEGO colour. The figure itself is a procedural humanoid volume — capsules and
-ellipsoids for legs, hips, torso, arms, neck and head — voxelised onto a grid
-and rebuilt brick by brick.
+It opens straight on the character — there's no upload step. The figure is a
+procedural humanoid volume — capsules and ellipsoids for legs, hips, torso,
+arms, neck and head — voxelised onto a grid and rebuilt brick by brick.
+
+A photo is **optional**: hit **Photo** (or drop an image anywhere on the page)
+and hair, skin, shirt and trouser colours are read from four regions of it and
+snapped to the nearest real LEGO colour. It's a shortcut for picking four
+colours you can already set by hand, so it was never worth gating the app
+behind.
 
 Stand / point / cheer poses, and every body part is recolourable from the
 palette. Eyes are printed round tiles (a canvas-generated texture on a cylinder
