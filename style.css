@@ -1,12 +1,9 @@
-/* Brutalist chrome: hard 2px rules, no radii, no blur, mono type.
-   The 3D scene keeps the plain white ground it renders against. */
 :root {
-  --ink: #000;
-  --paper: #fff;
-  --accent: #ffcf00;
-  --rule: 2px;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-  font-family: var(--mono);
+  --ink: #16181c;
+  --ink-dim: #8b9099;
+  --line: #e6e7ea;
+  --white: #fff;
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -14,23 +11,109 @@
 html, body {
   margin: 0;
   height: 100%;
-  background: var(--paper);
+  background: var(--white);
   color: var(--ink);
   overflow: hidden;
-  font-family: var(--mono);
 }
 
 .hidden { display: none !important; }
 
-button, a { font-family: var(--mono); }
+#siblingLink {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  font-size: .76rem;
+  color: var(--ink-dim);
+  text-decoration: none;
+}
+#siblingLink:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 
-/* ---------- stage ---------- */
+/* ---------- Options panel ---------- */
+#panelToggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 12;
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 15px;
+  font-size: .8rem;
+  color: var(--ink);
+  cursor: pointer;
+}
+#panelToggle:hover { border-color: var(--ink); }
+
+#panel {
+  position: fixed;
+  top: 58px;
+  left: 16px;
+  bottom: 92px;
+  width: 244px;
+  z-index: 11;
+  padding: 6px 14px 14px;
+  overflow-y: auto;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  scrollbar-width: thin;
+}
+/* hidden by default on narrow screens, always shown on wide ones */
+#panel { display: none; }
+body.panel-open #panel { display: block; }
+
+.grp { margin-top: 14px; }
+.grp h2 {
+  margin: 0 0 7px;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.row { display: flex; flex-wrap: wrap; gap: 5px; }
+.row + .row { margin-top: 7px; }
+
+.sw {
+  width: 21px;
+  height: 21px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,.16);
+  padding: 0;
+  cursor: pointer;
+  transition: transform .12s;
+}
+.sw:hover { transform: scale(1.14); }
+.sw.on {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.pill {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: .74rem;
+  color: var(--ink-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pill:hover { border-color: var(--ink); color: var(--ink); }
+.pill.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+@media (min-width: 900px) {
+  #panelToggle { display: none; }
+  #panel { display: block; top: 16px; }
+}
+
+/* ---------- Build ---------- */
 #buildStage { position: fixed; inset: 0; }
 
 #scene {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   display: block;
@@ -38,239 +121,75 @@ button, a { font-family: var(--mono); }
 }
 #scene:active { cursor: grabbing; }
 
-/* ---------- side menu ---------- */
-#panelToggle {
-  position: fixed;
-  top: 14px;
-  left: 14px;
-  z-index: 12;
-  background: var(--accent);
-  border: var(--rule) solid var(--ink);
-  border-radius: 0;
-  padding: 8px 14px;
-  font-size: .72rem;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--ink);
-  cursor: pointer;
-  box-shadow: 4px 4px 0 var(--ink);
-}
-#panelToggle:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
-
-#panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 258px;
-  z-index: 11;
-  display: none;
-  overflow-y: auto;
-  background: var(--paper);
-  border-right: var(--rule) solid var(--ink);
-  padding-bottom: 18px;
-}
-body.panel-open #panel { display: block; }
-
-#panelHead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--ink);
-  color: var(--paper);
-  padding: 12px 12px 11px;
-  border-bottom: var(--rule) solid var(--ink);
-}
-#panelHead b {
-  display: block;
-  font-size: .92rem;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-#panelHead span {
-  display: block;
-  margin-top: 3px;
-  font-size: .6rem;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  opacity: .65;
-}
-
-.grp { border-bottom: var(--rule) solid var(--ink); padding: 0 0 11px; }
-
-.grp h2 {
-  margin: 0 0 9px;
-  padding: 5px 12px 4px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: .6rem;
-  font-weight: 700;
-  letter-spacing: .2em;
-  text-transform: uppercase;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 0 12px;
-}
-.row + .row { margin-top: 8px; }
-
-/* colour chips */
-.sw {
-  width: 22px;
-  height: 22px;
-  border: var(--rule) solid var(--ink);
-  border-radius: 0;
-  padding: 0;
-  cursor: pointer;
-}
-.sw:hover { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent); }
-.sw.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
-
-/* option pills — square, obviously */
-.pill {
-  background: var(--paper);
-  border: var(--rule) solid var(--ink);
-  border-radius: 0;
-  padding: 4px 8px;
-  font-size: .64rem;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--ink);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.pill:hover { background: var(--accent); }
-.pill.on { background: var(--ink); color: var(--paper); }
-
-/* ---------- bottom bar ---------- */
+/* Dock */
 #dock {
   position: fixed;
-  bottom: 18px;
+  bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  align-items: stretch;
-  gap: 0;
-  /* separators are the black backdrop showing through the gaps, so they stay
-     correct when the bar wraps onto a second row */
-  background: var(--ink);
-  border: var(--rule) solid var(--ink);
-  border-radius: 0;
-  box-shadow: 5px 5px 0 var(--ink);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.07);
   max-width: 94vw;
   flex-wrap: wrap;
-  gap: var(--rule);
+  justify-content: center;
 }
 
-#dock .pills { display: contents; }
-#dock .pill {
-  border: 0;
-  padding: 9px 12px;
-}
-
-.divider { display: none; }
+.divider { width: 1px; height: 18px; background: var(--line); }
 
 .icon-btn {
-  background: var(--paper);
+  background: none;
   border: 0;
-  border-radius: 0;
-  padding: 9px 13px;
-  font-size: .64rem;
-  font-weight: 700;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--ink);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: .8rem;
+  color: var(--ink-dim);
   cursor: pointer;
   white-space: nowrap;
 }
-.icon-btn:hover { background: var(--accent); }
+.icon-btn:hover { background: #f2f3f5; color: var(--ink); }
 
-/* ---------- readouts ---------- */
 #brickTally {
   position: fixed;
-  top: 14px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
-  padding: 5px 10px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: .62rem;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
+  font-size: .75rem;
+  color: var(--ink-dim);
+  letter-spacing: .02em;
   pointer-events: none;
 }
 
-#siblingLink {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  padding: 5px 10px;
-  border: var(--rule) solid var(--ink);
-  background: var(--paper);
-  color: var(--ink);
-  font-size: .62rem;
-  font-weight: 700;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-#siblingLink:hover { background: var(--accent); }
-
-/* ---------- loading ---------- */
+/* Loading */
 #loading {
   position: fixed;
   inset: 0;
   z-index: 30;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--paper);
+  gap: 12px;
+  background: rgba(255,255,255,.86);
 }
+#loading p { margin: 0; font-size: .82rem; color: var(--ink-dim); }
 .spinner {
-  width: 22px;
-  height: 22px;
-  border: 4px solid var(--ink);
-  border-right-color: transparent;
-  animation: spin .8s steps(8, end) infinite;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  border-top-color: var(--ink);
+  animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ---------- layout ---------- */
-@media (min-width: 900px) {
-  #panelToggle { display: none; }
-  #panel { display: block; }
-  /* the menu takes real space rather than sitting on top of the model */
-  #scene { left: 258px; width: calc(100% - 258px); }
-  #brickTally { left: calc(258px + (100vw - 258px) / 2); }
-  #dock { left: calc(258px + (100vw - 258px) / 2); }
-}
-
-@media (max-width: 899px) {
-  #panel { box-shadow: 5px 0 0 rgba(0,0,0,.12); }
-  #brickTally { display: none; }
-  /* full-bleed bottom bar: every row fills, so a wrap never leaves a ragged
-     block of backdrop showing */
-  #dock {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    transform: none;
-    max-width: none;
-    border-left: 0;
-    border-right: 0;
-    border-bottom: 0;
-    box-shadow: none;
-  }
-  #dock .pill, #dock .icon-btn {
-    flex: 1 1 auto;
-    padding: 11px 6px;
-    font-size: .6rem;
-  }
+@media (max-width: 520px) {
+  #dock { gap: 6px; padding: 7px 9px; bottom: 14px; }
+  .divider { display: none; }
 }

@@ -48,19 +48,6 @@ asserts all 1,800 combinations still yield exactly two eye anchors.
 > runs a depth model to rebuild the photo's *actual* 3D shape.
 > The two share `brickscene.js` by copy — a fix in one needs porting to the other.
 
-## Interface
-
-Brutalist: hard 2px rules, zero border-radius, monospace throughout, no blur or
-soft shadows, black/white with one yellow accent. The menu is a flush-left
-sidebar that takes real layout space rather than floating over the model — the
-renderer sizes itself to the canvas box, not the window, so the figure stays
-centred in the space beside it. Under 900px the menu collapses to an OPTIONS
-button and the bottom bar goes full-bleed.
-
-Dock separators are the black backdrop showing through 2px flex gaps rather
-than per-button borders, so a wrapped row never leaves a stray rule or a ragged
-block of backdrop.
-
 ## Renderer (`brickscene.js`)
 
 Takes a `Map` of `"x,y,z" → colour` and:
