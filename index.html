@@ -14,62 +14,69 @@
 
     <div id="loading"><span class="spinner"></span></div>
 
-    <button id="panelToggle" aria-label="Toggle options">Options</button>
+    <button id="panelToggle" aria-label="Toggle options">Edit</button>
 
     <aside id="panel">
-      <section class="grp">
-        <h2>Skin</h2>
-        <div class="row" id="skinRow"></div>
+      <section class="grp is-open" data-grp="skin">
+        <button class="grp-head"><span>skin</span><span class="grp-val" id="skinVal"></span></button>
+        <div class="grp-body"><div class="row" id="skinRow"></div></div>
       </section>
 
-      <section class="grp">
-        <h2>Hair</h2>
-        <div class="row pills" id="hairRow"></div>
-        <div class="row" id="hairColorRow"></div>
+      <section class="grp" data-grp="hair">
+        <button class="grp-head"><span>hair</span><span class="grp-val" id="hairVal"></span></button>
+        <div class="grp-body">
+          <div class="row pills" id="hairRow"></div>
+          <div class="row" id="hairColorRow"></div>
+        </div>
       </section>
 
-      <section class="grp">
-        <h2>Body</h2>
-        <div class="row pills" id="bodyRow"></div>
+      <section class="grp" data-grp="body">
+        <button class="grp-head"><span>body</span><span class="grp-val" id="bodyVal"></span></button>
+        <div class="grp-body"><div class="row pills" id="bodyRow"></div></div>
       </section>
 
-      <section class="grp">
-        <h2>Top</h2>
-        <div class="row pills" id="topRow"></div>
-        <div class="row" id="topColorRow"></div>
+      <section class="grp" data-grp="top">
+        <button class="grp-head"><span>top</span><span class="grp-val" id="topVal"></span></button>
+        <div class="grp-body">
+          <div class="row pills" id="topRow"></div>
+          <div class="row" id="topColorRow"></div>
+        </div>
       </section>
 
-      <section class="grp">
-        <h2>Bottom</h2>
-        <div class="row pills" id="bottomRow"></div>
-        <div class="row" id="bottomColorRow"></div>
+      <section class="grp" data-grp="bottom">
+        <button class="grp-head"><span>bottom</span><span class="grp-val" id="bottomVal"></span></button>
+        <div class="grp-body">
+          <div class="row pills" id="bottomRow"></div>
+          <div class="row" id="bottomColorRow"></div>
+        </div>
       </section>
 
-      <section class="grp">
-        <h2>Shoes</h2>
-        <div class="row" id="shoeColorRow"></div>
+      <section class="grp" data-grp="shoes">
+        <button class="grp-head"><span>shoes</span><span class="grp-val" id="shoeVal"></span></button>
+        <div class="grp-body"><div class="row" id="shoeColorRow"></div></div>
       </section>
 
-      <section class="grp">
-        <h2>Extras</h2>
-        <div class="row pills" id="extrasRow">
-          <button class="pill" data-flag="glasses">Glasses</button>
-          <button class="pill" data-flag="beard">Beard</button>
+      <section class="grp" data-grp="extras">
+        <button class="grp-head"><span>extras</span><span class="grp-val" id="extrasVal"></span></button>
+        <div class="grp-body">
+          <div class="row pills" id="extrasRow">
+            <button class="pill" data-flag="glasses">glasses</button>
+            <button class="pill" data-flag="beard">beard</button>
+          </div>
         </div>
       </section>
     </aside>
 
     <div id="dock">
       <div class="poses pills" id="poseRow"></div>
-      <span class="divider"></span>
-      <button id="shuffleBtn" class="icon-btn" title="Random character">Shuffle</button>
-      <button id="replayBtn" class="icon-btn" title="Replay the build">Rebuild</button>
-      <button id="photoBtn" class="icon-btn" title="Take the colours from a photo">Photo</button>
-      <button id="shotBtn" class="icon-btn" title="Save image">Save</button>
+      <button id="shuffleBtn" class="icon-btn" title="Random character">shuffle</button>
+      <button id="replayBtn" class="icon-btn" title="Replay the build">rebuild</button>
+      <button id="photoBtn" class="icon-btn" title="Take the colours from a photo">photo</button>
+      <button id="shotBtn" class="icon-btn" title="Save image">save</button>
     </div>
 
     <p id="brickTally"></p>
-    <a id="siblingLink" href="https://legoify-likeness.vercel.app">likeness builder →</a>
+    <a id="siblingLink" href="https://legoify-likeness.vercel.app">likeness →</a>
     <input id="fileInput" type="file" accept="image/*" hidden />
   </main>
 

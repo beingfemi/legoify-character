@@ -149,7 +149,34 @@ function syncUI() {
   for (const b of document.querySelectorAll("#extrasRow .pill")) {
     b.classList.toggle("on", !!CHAR[b.dataset.flag]);
   }
+
+  syncSummaries();
 }
+
+// A collapsed section still reports its value, so the whole character stays
+// readable without opening anything.
+const dot = (c) => `<i style="background:${hex(c)}"></i>`;
+
+function syncSummaries() {
+  const extras = [CHAR.glasses && "glasses", CHAR.beard && "beard"].filter(Boolean);
+  $("skinVal").innerHTML = dot(CHAR.skin);
+  $("hairVal").innerHTML = CHAR.hair + (CHAR.hair === "none" ? "" : dot(CHAR.hairColor));
+  $("bodyVal").textContent = CHAR.body;
+  $("topVal").innerHTML = CHAR.top + dot(CHAR.topColor);
+  $("bottomVal").innerHTML = CHAR.bottom + dot(CHAR.bottomColor);
+  $("shoeVal").innerHTML = dot(CHAR.shoeColor);
+  $("extrasVal").textContent = extras.length ? extras.join(", ") : "none";
+}
+
+// only one section open at a time
+document.getElementById("panel").addEventListener("click", (e) => {
+  const head = e.target.closest(".grp-head");
+  if (!head) return;
+  const grp = head.parentElement;
+  const wasOpen = grp.classList.contains("is-open");
+  for (const g of document.querySelectorAll(".grp")) g.classList.remove("is-open");
+  if (!wasOpen) grp.classList.add("is-open");
+});
 
 $("extrasRow").addEventListener("click", (e) => {
   const b = e.target.closest(".pill");

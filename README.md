@@ -48,6 +48,16 @@ asserts all 1,800 combinations still yield exactly two eye anchors.
 > runs a depth model to rebuild the photo's *actual* 3D shape.
 > The two share `brickscene.js` by copy — a fix in one needs porting to the other.
 
+## Interface
+
+Deliberately quiet. The options panel has no card — no border, background,
+shadow or blur — just a column of hairline rows on the page.
+
+Sections collapse to a single row showing **their current value**, with only one
+open at a time. So the whole character stays readable at a glance
+(`hair · short ●`, `bottom · trousers ●`) while ~110 controls drop to ~35 on
+screen. Nothing is removed, only deferred.
+
 ## Renderer (`brickscene.js`)
 
 Takes a `Map` of `"x,y,z" → colour` and:
