@@ -160,7 +160,7 @@ export class BrickScene {
     const renderPass = new RenderPass(scene, this.camera);
     renderPass.clearAlpha = 0;
     composer.addPass(renderPass);
-    const gtao = new GTAOPass(scene, this.camera, innerWidth, innerHeight);
+    const gtao = new GTAOPass(scene, this.camera, canvas.clientWidth || innerWidth, canvas.clientHeight || innerHeight);
     gtao.output = GTAOPass.OUTPUT.Default;
     gtao.blendIntensity = 0.85;
     gtao.updateGtaoMaterial({
@@ -192,7 +192,9 @@ export class BrickScene {
   }
 
   resize() {
-    const w = innerWidth, h = innerHeight;
+    // Measure the canvas itself: the layout may reserve space beside it.
+    const w = this.canvas.clientWidth || innerWidth;
+    const h = this.canvas.clientHeight || innerHeight;
     this.renderer.setSize(w, h, false);
     this.composer.setSize(w, h);
     this.gtao.setSize(w, h);
