@@ -244,10 +244,23 @@ addEventListener("drop", (e) => {
   if (f?.type.startsWith("image/")) handleFile(f);
 });
 
+// The fixed UI the figure has to stay clear of, measured at every fit so a
+// wrapped dock or a short window is accounted for.
+function measureInsets() {
+  const gap = 16;
+  const box = (id) => $(id).getBoundingClientRect();
+  const top = Math.max(box("brickTally").bottom, box("siblingLink").bottom, box("panelToggle").bottom) + gap;
+  const bottom = innerHeight - box("dock").top + gap;
+  const panel = box("panel");
+  const sidebar = matchMedia("(min-width: 900px)").matches && panel.width > 0;
+  return { top, bottom, left: sidebar ? panel.right + gap : 0, right: 0 };
+}
+
 // ─────────────────── go ───────────────────
 syncUI();
 requestAnimationFrame(() => requestAnimationFrame(() => {
   scene = new BrickScene(document.getElementById("scene"));
+  scene.setInsets(measureInsets);
   rebuild();
   loadingEl.classList.add("hidden");
 }));

@@ -89,6 +89,9 @@ function occlusionAt(vox, x, y, z) {
   return Math.max(AO_FLOOR, 1 - AO_STRENGTH * t);
 }
 
+// How much breathing room the model gets inside the free area (1 = touching).
+const FIT_MARGIN = 1.4;
+
 export class BrickScene {
   constructor(canvas) {
     this.canvas = canvas;
@@ -99,6 +102,7 @@ export class BrickScene {
     this.userTouched = false;
     this.brickCount = 0;
     this._dummy = new THREE.Object3D();
+    this.getInsets = () => ({ top: 0, right: 0, bottom: 0, left: 0 });
 
     // Transparent canvas over the page's white: keeps the background out of the
     // tone mapper, which would otherwise render pure white as ~0.81 grey.
@@ -287,6 +291,12 @@ export class BrickScene {
     return total;
   }
 
+  // fn returns the px the page's fixed UI covers on each edge; re-read on every fit.
+  setInsets(fn) {
+    this.getInsets = fn;
+    if (this.figure) this.fitCamera();
+  }
+
   // Frame the whole model, keeping whatever direction the user is viewing from.
   fitCamera() {
     const box = new THREE.Box3().setFromObject(this.figure);
@@ -294,17 +304,27 @@ export class BrickScene {
     const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
 
-    const fov = THREE.MathUtils.degToRad(this.camera.fov);
-    const fitH = size.y / (2 * Math.tan(fov / 2));
-    const fitW = size.x / (2 * Math.tan(fov / 2) * this.camera.aspect);
-    const dist = Math.max(fitH, fitW) * 1.32;
+    // Fit into the part of the canvas the page's UI leaves free, not the whole
+    // canvas: the fixed chrome takes a bigger share of a short window.
+    const W = this.canvas.clientWidth || innerWidth;
+    const H = this.canvas.clientHeight || innerHeight;
+    const ins = this.getInsets();
+    const side = Math.max(ins.left, ins.right);          // stay centred horizontally
+    const usableW = Math.max(120, W - 2 * side);
+    const usableH = Math.max(120, H - ins.top - ins.bottom);
+
+    const tan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
+    const fitH = (size.y * H) / (2 * tan * usableH);
+    const fitW = (size.x * W) / (2 * tan * this.camera.aspect * usableW);
+    const dist = Math.max(fitH, fitW) * FIT_MARGIN;
+
+    // centre the model in the free band rather than the full height
+    this.camera.setViewOffset(W, H, 0, -(ins.top - ins.bottom) / 2, W, H);
 
     const dir = this.camera.position.clone().sub(this.controls.target);
     if (dir.lengthSq() < 1e-6) dir.set(0.34, 0.2, 1);
     dir.normalize();
 
-    // lift the model slightly so the dock never covers its feet
-    center.y -= size.y * 0.05;
     this.controls.target.copy(center);
     this.camera.position.copy(center).addScaledVector(dir, dist);
     this.controls.minDistance = dist * 0.3;
