@@ -197,6 +197,9 @@ export class BrickScene {
 
   resize() {
     const w = innerWidth, h = innerHeight;
+    // A hidden or collapsed view reports 0×0; zero-size render targets make
+    // every draw fail, so wait for a real size instead.
+    if (!w || !h) return;
     this.renderer.setSize(w, h, false);
     this.composer.setSize(w, h);
     this.gtao.setSize(w, h);
@@ -308,6 +311,7 @@ export class BrickScene {
     // canvas: the fixed chrome takes a bigger share of a short window.
     const W = this.canvas.clientWidth || innerWidth;
     const H = this.canvas.clientHeight || innerHeight;
+    if (!W || !H) return;
     const ins = this.getInsets();
     const side = Math.max(ins.left, ins.right);          // stay centred horizontally
     const usableW = Math.max(120, W - 2 * side);
@@ -383,6 +387,7 @@ export class BrickScene {
   }
 
   _tick() {
+    if (!this.canvas.clientWidth || !this.canvas.clientHeight) return;
     if (this.animating) {
       const t = performance.now() / 1000 - this.animStart;
       const dummy = this._dummy;
