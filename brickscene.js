@@ -90,7 +90,7 @@ function occlusionAt(vox, x, y, z) {
 }
 
 // How much breathing room the model gets inside the free area (1 = touching).
-const FIT_MARGIN = 1.4;
+const FIT_MARGIN = 1.55;
 
 export class BrickScene {
   constructor(canvas) {
@@ -313,8 +313,7 @@ export class BrickScene {
     const H = this.canvas.clientHeight || innerHeight;
     if (!W || !H) return;
     const ins = this.getInsets();
-    const side = Math.max(ins.left, ins.right);          // stay centred horizontally
-    const usableW = Math.max(120, W - 2 * side);
+    const usableW = Math.max(120, W - ins.left - ins.right);
     const usableH = Math.max(120, H - ins.top - ins.bottom);
 
     const tan = Math.tan(THREE.MathUtils.degToRad(this.camera.fov) / 2);
@@ -322,8 +321,8 @@ export class BrickScene {
     const fitW = (size.x * W) / (2 * tan * this.camera.aspect * usableW);
     const dist = Math.max(fitH, fitW) * FIT_MARGIN;
 
-    // centre the model in the free band rather than the full height
-    this.camera.setViewOffset(W, H, 0, -(ins.top - ins.bottom) / 2, W, H);
+    // centre the model in the free area rather than the whole canvas
+    this.camera.setViewOffset(W, H, -(ins.left - ins.right) / 2, -(ins.top - ins.bottom) / 2, W, H);
 
     const dir = this.camera.position.clone().sub(this.controls.target);
     if (dir.lengthSq() < 1e-6) dir.set(0.34, 0.2, 1);

@@ -53,8 +53,10 @@ asserts all 1,800 combinations still yield exactly two eye anchors.
 Typography and interface after [unstated.co](https://www.unstated.co/), kept on
 a white page: one 12 px size and one weight, 1.1 leading, −0.01em tracking;
 labels are the text colour at 50%; no borders, radii, shadows or blur. Options
-sit in a band of text columns across the top, listed one per line like a
-client list, and the selected item is shown by inversion.
+sit in one column on the left: each section is a two-column row of faded label
+and options, the options run inline, and every colour grid is ten squares wide
+so all sections share the same edges. The selected item is shown by inversion,
+and the figure is centred in the space to the right of the column.
 
 The face is Antique Legacy (Optimo). It is used **only if installed on the
 viewer's machine** (`local()`); no font file is published, since a trial

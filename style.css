@@ -60,7 +60,9 @@ button {
 }
 #scene:active { cursor: grabbing; }
 
-/* ---------- options: a band of text columns across the top ---------- */
+/* ---------- options: one column on the left ---------- */
+/* Each section is a two-column row: the faded label, then its options. Every
+   colour grid is ten squares wide, so all sections share the same edges. */
 #panelToggle {
   position: fixed;
   top: var(--pad);
@@ -73,44 +75,57 @@ button {
   position: fixed;
   top: var(--pad);
   left: var(--pad);
-  right: var(--pad);
   z-index: 11;
   display: none;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  column-gap: var(--col-gap);
-  row-gap: 20px;
+  width: 280px;
+  max-height: calc(100vh - var(--pad) * 2 - 30px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#panel::-webkit-scrollbar { display: none; }
+body.panel-open #panel { display: block; }
+
+.grp {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  column-gap: 8px;
   align-items: start;
 }
-body.panel-open #panel { display: grid; }
+.grp + .grp { margin-top: 14px; }
 
 .grp h2 {
+  grid-column: 1;
+  grid-row: 1 / span 2;
   margin: 0;
   font: inherit;
   opacity: .5;
 }
+.grp .row { grid-column: 2; }
 
-.row { display: flex; flex-wrap: wrap; gap: 2px; }
-.row + .row { margin-top: 8px; }
+.row + .row { margin-top: 6px; }
 
-/* option lists read like the reference's client lists: one per line */
+/* options run inline and wrap, like a comma list */
 .row.pills {
-  flex-direction: column;
-  flex-wrap: nowrap;
-  align-items: flex-start;
-  gap: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px 1px;
+  margin-left: -3px;
 }
 
 .pill {
-  display: block;
   padding: 0 3px;
-  margin-left: -3px;
   text-transform: capitalize;
   white-space: nowrap;
 }
 .pill:hover { opacity: .5; }
 .pill.on { background: var(--ink); color: var(--paper); opacity: 1; }
 
-/* colour chips: flat squares, like the reference's numbered boxes */
+/* colour chips: a fixed ten-wide grid of flat squares */
+.row:not(.pills) {
+  display: grid;
+  grid-template-columns: repeat(10, 15px);
+  gap: 3px;
+}
 .sw {
   width: 15px;
   height: 15px;
@@ -178,18 +193,17 @@ body.panel-open #panel { display: grid; }
 /* ---------- layout ---------- */
 @media (min-width: 900px) {
   #panelToggle { display: none; }
-  #panel { display: grid; }
+  #panel { display: block; }
 }
 
 @media (max-width: 899px) {
   #panel {
     top: calc(var(--pad) + 22px);
-    bottom: auto;
+    right: var(--pad);
+    width: auto;
     max-height: 62vh;
-    overflow-y: auto;
     padding-bottom: 12px;
     background: var(--paper);
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   #meta {
     top: var(--pad);

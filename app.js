@@ -244,22 +244,25 @@ addEventListener("drop", (e) => {
   if (f?.type.startsWith("image/")) handleFile(f);
 });
 
-// The fixed UI the figure has to stay clear of, measured at every fit so the
-// options band, a wrapped bottom line or a short window are all accounted for.
-// Anything sitting in the top half pushes the figure down; the bottom half, up.
-// On narrow screens the options open over the figure, so they don't count.
+// The fixed UI the figure has to stay clear of, measured at every fit so a
+// short window or a wrapped bottom line is accounted for. Text lines count
+// against the top or bottom by which half they sit in; on wide screens the
+// options column takes the left. On narrow screens the options open over the
+// figure, so they don't count.
 function measureInsets() {
   const gap = 20;
-  const ids = ["panelToggle", "dock", "meta"];
-  if (matchMedia("(min-width: 900px)").matches) ids.push("panel");
-  let top = 0, bottom = 0;
-  for (const id of ids) {
+  let top = 0, bottom = 0, left = 0;
+  for (const id of ["panelToggle", "dock", "meta"]) {
     const r = $(id).getBoundingClientRect();
     if (!r.width || !r.height) continue;
     if ((r.top + r.bottom) / 2 < innerHeight / 2) top = Math.max(top, r.bottom);
     else bottom = Math.max(bottom, innerHeight - r.top);
   }
-  return { top: top + gap, bottom: bottom + gap, left: 0, right: 0 };
+  if (matchMedia("(min-width: 900px)").matches) {
+    const r = $("panel").getBoundingClientRect();
+    if (r.width) left = r.right;
+  }
+  return { top: top + gap, bottom: bottom + gap, left: left ? left + gap : 0, right: 0 };
 }
 
 // ─────────────────── go ───────────────────
