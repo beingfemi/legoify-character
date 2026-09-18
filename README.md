@@ -48,6 +48,19 @@ asserts all 1,800 combinations still yield exactly two eye anchors.
 > runs a depth model to rebuild the photo's *actual* 3D shape.
 > The two share `brickscene.js` by copy — a fix in one needs porting to the other.
 
+## Interface
+
+Typography and interface after [unstated.co](https://www.unstated.co/), kept on
+a white page: one 12 px size and one weight, 1.1 leading, −0.01em tracking;
+labels are the text colour at 50%; no borders, radii, shadows or blur. Options
+sit in a band of text columns across the top, listed one per line like a
+client list, and the selected item is shown by inversion.
+
+The face is Antique Legacy (Optimo). It is used **only if installed on the
+viewer's machine** (`local()`); no font file is published, since a trial
+licence doesn't cover redistribution. Everyone else gets Inter Tight, the
+closest free neo-grotesk.
+
 ## Renderer (`brickscene.js`)
 
 Takes a `Map` of `"x,y,z" → colour` and:

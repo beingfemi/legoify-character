@@ -244,16 +244,22 @@ addEventListener("drop", (e) => {
   if (f?.type.startsWith("image/")) handleFile(f);
 });
 
-// The fixed UI the figure has to stay clear of, measured at every fit so a
-// wrapped dock or a short window is accounted for.
+// The fixed UI the figure has to stay clear of, measured at every fit so the
+// options band, a wrapped bottom line or a short window are all accounted for.
+// Anything sitting in the top half pushes the figure down; the bottom half, up.
+// On narrow screens the options open over the figure, so they don't count.
 function measureInsets() {
-  const gap = 16;
-  const box = (id) => $(id).getBoundingClientRect();
-  const top = Math.max(box("brickTally").bottom, box("siblingLink").bottom, box("panelToggle").bottom) + gap;
-  const bottom = innerHeight - box("dock").top + gap;
-  const panel = box("panel");
-  const sidebar = matchMedia("(min-width: 900px)").matches && panel.width > 0;
-  return { top, bottom, left: sidebar ? panel.right + gap : 0, right: 0 };
+  const gap = 20;
+  const ids = ["panelToggle", "dock", "meta"];
+  if (matchMedia("(min-width: 900px)").matches) ids.push("panel");
+  let top = 0, bottom = 0;
+  for (const id of ids) {
+    const r = $(id).getBoundingClientRect();
+    if (!r.width || !r.height) continue;
+    if ((r.top + r.bottom) / 2 < innerHeight / 2) top = Math.max(top, r.bottom);
+    else bottom = Math.max(bottom, innerHeight - r.top);
+  }
+  return { top: top + gap, bottom: bottom + gap, left: 0, right: 0 };
 }
 
 // ─────────────────── go ───────────────────
@@ -262,5 +268,6 @@ requestAnimationFrame(() => requestAnimationFrame(() => {
   scene = new BrickScene(document.getElementById("scene"));
   scene.setInsets(measureInsets);
   rebuild();
+  document.fonts.ready.then(() => scene.figure && scene.fitCamera());
   loadingEl.classList.add("hidden");
 }));
